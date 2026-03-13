@@ -7,22 +7,26 @@ class LinearRegression:
 
     def __init__(self, num_features: int, rng: np.random.Generator) -> None:
         self.weights = rng.random(num_features)
-        self.bias = np.array(0.0)  # смещение
+        self.bias = np.array(0.0)
 
     def predict(self, x: np.ndarray) -> np.ndarray:
-        return np.dot(x, self.weights) + self.bias
+        return x @ self.weights + self.bias
 
     def loss(self, x: np.ndarray, y: np.ndarray) -> float:
-        return np.mean(np.square(y - self.predict(x)))
+        residuals = y - self.predict(x)
+        return float(np.mean(residuals**2))
 
     def metric(self, x: np.ndarray, y: np.ndarray) -> float:
-        return 1 - self.loss(x, y) / np.var(y)  # / дисперсию
+        residuals = y - self.predict(x)
+        total = y - np.mean(y)
+        return float(1 - np.sum(residuals**2) / np.sum(total**2))
 
     def grad(self, x, y) -> tuple[np.ndarray, np.ndarray]:
-        p = self.predict(x)
-        dw = (-2 / len(x)) * np.dot(x.T, (y - p))
-        db = -2 * np.mean(y - p)
-        return dw, db
+        residuals = self.predict(x) - y
+        n = len(y)
+        grad_w = 2 * (x.T @ residuals) / n
+        grad_b = np.array(2 * np.mean(residuals))
+        return grad_w, grad_b
 
 
 class LogisticRegression:
@@ -34,27 +38,29 @@ class LogisticRegression:
         self.bias = np.array(0.0)
 
     def predict(self, x: np.ndarray) -> np.ndarray:
-        z = np.dot(x, self.weights) + self.bias
-        return 1 / (1 + np.exp(-z))
+        z = x @ self.weights + self.bias
+        return 1.0 / (1.0 + np.exp(-z))
 
     def loss(self, x: np.ndarray, y: np.ndarray) -> float:
-        p = self.predict(x)
-        return -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
+        p = np.clip(self.predict(x), 1e-15, 1 - 1e-15)
+        return float(-np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)))
 
     def metric(self, x: np.ndarray, y: np.ndarray) -> float:
-        return np.mean((self.predict(x) >= 0.5) == y)
+        predictions = (self.predict(x) >= 0.5).astype(int)
+        return float(np.mean(predictions == y))
 
     def grad(self, x, y) -> tuple[np.ndarray, np.ndarray]:
-        p = self.predict(x)
-        dw = 1 / len(x) * np.dot(x.T, (p - y))
-        db = np.mean(p - y)
-        return dw, db
+        residuals = self.predict(x) - y
+        n = len(y)
+        grad_w = (x.T @ residuals) / n
+        grad_b = np.array(np.mean(residuals))
+        return grad_w, grad_b
 
 
 class Exercise:
     @staticmethod
     def get_student() -> str:
-        return "Кузьмин Александр Андреевич, ПМ-35"
+        return "Наумов Дмитрий Сергеевич, ПМ-33"
 
     @staticmethod
     def get_topic() -> str:
@@ -71,6 +77,6 @@ class Exercise:
     @staticmethod
     def fit(model: LinearRegression | LogisticRegression, x: np.ndarray, y: np.ndarray, lr: float, n_iter: int) -> None:
         for _ in range(n_iter):
-            dw, db = model.grad(x, y)
-            model.weights -= lr * dw
-            model.bias -= lr * db
+            grad_w, grad_b = model.grad(x, y)
+            model.weights = model.weights - lr * grad_w
+            model.bias = model.bias - lr * grad_b

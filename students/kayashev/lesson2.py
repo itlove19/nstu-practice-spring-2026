@@ -2,28 +2,23 @@ import numpy as np
 
 
 class LinearRegression:
-    weights: np.ndarray
-    bias: np.ndarray
-
     def __init__(self, num_features: int, rng: np.random.Generator) -> None:
         self.weights = rng.random(num_features)
         self.bias = np.array(0.0)
 
     def predict(self, x: np.ndarray) -> np.ndarray:
-        return x @ self.weights + self.bias
+        return np.matmul(x, self.weights) + self.bias
 
     def loss(self, x: np.ndarray, y: np.ndarray) -> float:
-        return np.sum((y - self.predict(x)) ** 2) / (y.size)
+        return np.sum(np.square(self.predict(x) - y)) / y.size
 
     def metric(self, x: np.ndarray, y: np.ndarray) -> float:
-        ssres: float = np.sum((y - self.predict(x)) ** 2)
-        sstot: float = np.sum((y - np.mean(y)) ** 2)
-
-        return 1 - ssres / sstot
+        prediction = self.predict(x)
+        return 1 - np.sum((y - prediction) ** 2) / np.sum((y - np.average(y)) ** 2)
 
     def grad(self, x, y) -> tuple[np.ndarray, np.ndarray]:
-        n: float = y.size
-        return -2 / n * (x.T @ (y - self.predict(x))), -2 / n * np.sum(y - self.predict(x))
+        prediction = self.predict(x)
+        return -2 / y.size * (y - prediction) @ x, -2 * np.mean(y - prediction)
 
 
 class LogisticRegression:
@@ -36,26 +31,28 @@ class LogisticRegression:
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         z = x @ self.weights + self.bias
-        return 1 / (1 + np.exp(-z))
+        return 1 / (1 + (np.exp(-z)))
 
     def loss(self, x: np.ndarray, y: np.ndarray) -> float:
-        p = self.predict(x)
-        return -1 / y.size * np.sum(y * np.log(p) + (1 - y) * np.log(1 - p))
+        predict = self.predict(x)
+        return -np.sum(y * np.log(predict) + (-y + 1) * np.log(-predict + 1))
 
     def metric(self, x: np.ndarray, y: np.ndarray) -> float:
-        y_pred = np.where(self.predict(x) >= 0.5, 1, 0)
-
-        return np.sum(y_pred == y) / y.size
+        alpha = 0.5
+        predict = self.predict(x)
+        predictgrtthan = predict > alpha
+        ygrtthan = y > alpha
+        return np.sum(np.logical_not(np.logical_xor(predictgrtthan, ygrtthan).astype(int))) / y.size
 
     def grad(self, x, y) -> tuple[np.ndarray, np.ndarray]:
-        p = self.predict(x)
-        return (x.T @ (p - y)) / y.size, np.sum(p - y) / y.size
+        predict = self.predict(x)
+        return (y / predict - (1 - y) / (1 - predict)) @ x, np.sum(y / predict - (1 - y) / (1 - predict))
 
 
 class Exercise:
     @staticmethod
     def get_student() -> str:
-        return "Придатченко Павел Павлович, ПМ-34"
+        return "Каяшев Валентин Константинович, ПМ-31"
 
     @staticmethod
     def get_topic() -> str:
@@ -72,6 +69,6 @@ class Exercise:
     @staticmethod
     def fit(model: LinearRegression | LogisticRegression, x: np.ndarray, y: np.ndarray, lr: float, n_iter: int) -> None:
         for _ in range(n_iter):
-            grad_w, grad_b = model.grad(x, y)
-            model.weights -= lr * grad_w
-            model.bias -= lr * grad_b
+            gradweight, gradbias = model.grad(x, y)
+            model.weights -= lr * gradweight
+            model.bias -= lr * gradbias
