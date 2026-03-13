@@ -19,9 +19,9 @@ class LinearRegression:
         return 1 - (np.sum(np.square(y - self.predict(x))) / np.sum(np.square(y - np.sum(y) / y.size)))
 
     def grad(self, x, y) -> tuple[np.ndarray, np.ndarray]:
-        dw = -2 * np.sum(y - self.predict(x)) / y.size
-        db = -2 * x.T @ (y - self.predict(x)) / y.size
-        return db, dw
+        db = -2 * np.sum(y - self.predict(x)) / y.size
+        dw = -2 * x.T @ (y - self.predict(x)) / y.size
+        return dw, db
 
 
 class LogisticRegression:
@@ -33,19 +33,19 @@ class LogisticRegression:
         self.bias = np.array(0.0)
 
     def predict(self, x: np.ndarray) -> np.ndarray:
-        return 1 / (1 + np.exp(-(self.bias + self.weights * x)))
+        return 1 / (1 + np.exp(-(self.bias + x @ self.weights)))
 
     def loss(self, x: np.ndarray, y: np.ndarray) -> float:
-        return np.sum(-(y * np.log(self.predict(x)) + (1 - y) * np.log(1 - self.predict(x)))) / y.size
+        return -np.sum(y * np.log(self.predict(x)) + (1 - y) * np.log(1 - self.predict(x))) / y.size
 
     def metric(self, x: np.ndarray, y: np.ndarray) -> float:
-        doorstep = 0.8
-        return ((self.predict(x) >= doorstep).astype(int) == y) / y.size
+        doorstep = 0.5
+        return np.sum((self.predict(x) >= doorstep).astype(int) == y) / y.size
 
     def grad(self, x, y) -> tuple[np.ndarray, np.ndarray]:
         db = np.sum(self.predict(x) - y) / y.size
-        dw = x.T @ (self.predict(x) - y) / y.size
-        return db, dw
+        dw = (x.T @ (self.predict(x) - y)) / len(y)
+        return dw, db
 
 
 class Exercise:
@@ -68,6 +68,6 @@ class Exercise:
     @staticmethod
     def fit(model: LinearRegression | LogisticRegression, x: np.ndarray, y: np.ndarray, lr: float, n_iter: int) -> None:
         for _ in range(n_iter):
-            dw1, dw2 = model.grad(x, y)
-            model.weights -= lr * dw1
-            model.bias -= lr * dw2
+            dw, db = model.grad(x, y)
+            model.weights -= lr * dw
+            model.bias -= lr * db
