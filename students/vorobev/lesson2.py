@@ -38,8 +38,8 @@ class LogisticRegression:
     def loss(self, x: np.ndarray, y: np.ndarray) -> float:
         return -np.sum(y * np.log(self.predict(x)) + (1 - y) * np.log(1 - self.predict(x))) / y.size
 
-    def metric(self, x: np.ndarray, y: np.ndarray, str = "accuracy") -> float:
-        doorstep = 0.5 
+    def metric(self, x: np.ndarray, y: np.ndarray, str="accuracy") -> float:
+        doorstep = 0.5
         pred = self.predict(x)
         pred1 = self.predict(x) >= doorstep
         TP = np.sum((pred1 == 1) & (y == 1))
@@ -47,18 +47,18 @@ class LogisticRegression:
         FN = np.sum((pred1 == 0) & (y == 1))
         TN = np.sum((pred1 == 0) & (y == 0))
         if str == "accuracy":
-            metric = (TP + TN) / (TP + FP + TN + FN) if((TP + FP + TN + FN) != 0) else 0
+            metric = (TP + TN) / (TP + FP + TN + FN) if ((TP + FP + TN + FN) != 0) else 0
         if str == "precision":
-            metric = TP / (TP + FP) if((TP + FP) != 0) else 0
+            metric = TP / (TP + FP) if ((TP + FP) != 0) else 0
         if str == "recall":
-            metric = TP / (TP + FN) if((TP + FN) != 0) else 0
+            metric = TP / (TP + FN) if ((TP + FN) != 0) else 0
         if str == "F1":
-            metric = TP / (TP + (FP + FN) / 2) if((TP + (FP + FN) / 2) != 0) else 0
+            metric = TP / (TP + (FP + FN) / 2) if ((TP + (FP + FN) / 2) != 0) else 0
         if str == "AUROC":
             pos = pred[y == 1]
             neg = pred[y == 0]
-            score = pos[: , None] > neg[None, : ]
-            metric = np.sum(score) / (len(pos) * len(neg)) if(len(pos) * len(neg) != 0) else 0
+            score = pos[:, None] > neg[None, :]
+            metric = np.sum(score) / (len(pos) * len(neg)) if (len(pos) * len(neg) != 0) else 0
 
         return metric
 
@@ -85,12 +85,6 @@ class Exercise:
     def create_logistic_model(num_features: int, rng: np.random.Generator | None = None) -> LogisticRegression:
         return LogisticRegression(num_features, rng or np.random.default_rng())
 
-    # @staticmethod
-    # def fit(model: LinearRegression | LogisticRegression, x: np.ndarray, y: np.ndarray, lr: float, n_iter: int) -> None:
-    #     for _ in range(n_iter):
-    #         dw, db = model.grad(x, y)
-    #         model.weights -= lr * dw
-    #         model.bias -= lr * db
     @staticmethod
     def fit(
         model: LinearRegression | LogisticRegression,
@@ -100,7 +94,7 @@ class Exercise:
         n_epoch: int,
         batch_size: int | None = None,
     ) -> None:
-        if batch_size == None or batch_size <= 0:
+        if batch_size is None or batch_size <= 0:
             for _ in range(n_epoch):
                 dw, db = model.grad(x, y)
                 model.weights -= lr * dw
