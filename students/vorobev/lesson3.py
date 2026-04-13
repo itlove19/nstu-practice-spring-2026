@@ -1,4 +1,3 @@
-from turtle import backward
 from collections.abc import Sequence
 from typing import Protocol
 
