@@ -186,7 +186,7 @@ class CrossEntropyLoss(Loss):
         self.one_hot_y[np.arange(self.batch_size), y] = 1.0
         log_probs = x - x_max - np.log(sum_exp)
 
-        return -np.mean(log_probs[np.arange(self.batch_size), y])
+        return np.float32(-np.mean(log_probs[np.arange(self.batch_size), y]))
 
     def backward(self) -> np.ndarray:
         return (self.sm - self.one_hot_y) / self.batch_size
