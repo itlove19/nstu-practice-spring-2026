@@ -16,6 +16,7 @@ class Layer(Protocol):
     @property
     def grad(self) -> Sequence[np.ndarray]: ...
 
+
 class Loss(Protocol):
     def forward(self, x: np.ndarray, y: np.ndarray) -> np.ndarray: ...
 
@@ -142,6 +143,7 @@ class Model(Layer):
             grads.extend(layer.grad)
         return grads
 
+
 class MSELoss(Loss):
     def forward(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         self.x = x
@@ -157,10 +159,9 @@ class BCELoss(Loss):
         self.x = x
         self.y = y
         return -np.sum(y * np.log(x) + (1 - y) * np.log(1 - x)) / y.size
+
     def backward(self) -> np.ndarray:
         return ((self.x - self.y) / (self.x * (1 - self.x))) / self.x.shape[0]
-
-
 
 
 class NLLLoss(Loss):
@@ -177,7 +178,7 @@ class NLLLoss(Loss):
 class CrossEntropyLoss(Loss):
     def forward(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         self.batch_size = x.shape[0]
-        
+
         x_max = np.max(x, axis=-1, keepdims=True)
         exp_x = np.exp(x - x_max)
         sum_exp = np.sum(exp_x, axis=-1, keepdims=True)
@@ -190,6 +191,7 @@ class CrossEntropyLoss(Loss):
 
     def backward(self) -> np.ndarray:
         return (self.sm - self.one_hot_y) / self.batch_size
+
 
 class Exercise:
     @staticmethod
@@ -247,4 +249,3 @@ class Exercise:
                 model.backward(loss.backward())
                 for param, grad in zip(model.parameters, model.grad, strict=True):
                     param -= grad * lr
-
